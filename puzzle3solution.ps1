@@ -1,0 +1,2 @@
+$content = $content | foreach {[string]$_ * 100}
+remove-variable counter;$row=0;$line = 0;$result = While ($content[$line+1]){$line+=2;$row+=1;if($content[$line][$row] -eq '#'){'= found =';$line;$row;$counter++}else{'= not found =';$line;$row}};$counter

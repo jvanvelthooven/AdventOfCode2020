@@ -1,0 +1,1 @@
+($csv | where {$line = $_;$array = $line.password -split('') | where {$_};if ((($array[$line.min - 1] | where {$_ -eq $line.letter}) + ($array[$line.max - 1] | where {$_ -eq $line.letter})).length -eq 1){'yay'}}).count
