@@ -10,7 +10,10 @@ Function Add-Coordinate {
   If (!$obj[$coordinate[0]][$coordinate[1]]) {
     $obj[$coordinate[0]][$coordinate[1]] = @{}
   }
-  $obj[$coordinate[0]][$coordinate[1]][$coordinate[2]] = $value
+  If (!$obj[$coordinate[0]][$coordinate[1]][$coordinate[2]]) {
+    $obj[$coordinate[0]][$coordinate[1]][$coordinate[2]] = @{}
+  }
+  $obj[$coordinate[0]][$coordinate[1]][$coordinate[2]][$coordinate[3]] = $value
 }
 
 Function Show-Levels {
@@ -60,7 +63,7 @@ Function Get-FirstCycle {
   For ($row = 0;$row -lt $content.length;$row++) {
     $cols = $content[$row].ToCharArray()
     For ($col = 0;$col -lt $cols.length;$col++) {
-      Add-Coordinate -obj $engine -coordinate $col,$row,0 -value $cols[$col]
+      Add-Coordinate -obj $engine -coordinate $col,$row,0,0 -value $cols[$col]
     }
   }
 
@@ -79,16 +82,21 @@ Function Get-NextCycle {
   $uniqueX = $engine.keys | Sort-Object -Unique
   $uniqueY = $engine.keys | ForEach-Object {$x = $_;$engine[$x].keys} | Sort-Object -Unique
   $uniqueZ = $engine.keys | ForEach-Object {$x = $_;$engine[$x].keys} | ForEach-Object {$engine[$x][$_].keys} | Sort-Object -Unique
+  $uniqueA = $engine.keys | ForEach-Object {$x = $_;$engine[$x].keys} | ForEach-Object {$y = $_;$engine[$x][$y].keys} | ForEach-Object {$engine[$x][$y][$_].keys} | Sort-Object -Unique
 
   # get neighbours of cubes that are active
   $cubesToCheck = For ($x = $uniqueX[0];$x -le $uniqueX[-1];$x++) {
     For ($y = $uniqueY[0];$y -le $uniqueY[-1];$y++) {
       For ($z = $uniqueZ[0];$z -le $uniqueZ[-1];$z++) {
-        If ($engine[$x] -and $engine[$x][$y] -and $engine[$x][$y][$z] -eq '#') {
-          For ($1 = ($x - 1);$1 -le ($x + 1);$1++) {
-            For ($2 = ($y - 1);$2 -le ($y + 1);$2++) {
-              For ($3 = ($z - 1);$3 -le ($z + 1);$3++) {
-                ,($1,$2,$3)
+        For ($a = $uniqueA[0];$a -le $uniqueA[-1];$a++) {
+          If ($engine[$x] -and $engine[$x][$y] -and $engine[$x][$y][$z] -and $engine[$x][$y][$z][$a] -eq '#') {
+            For ($1 = ($x - 1);$1 -le ($x + 1);$1++) {
+              For ($2 = ($y - 1);$2 -le ($y + 1);$2++) {
+                For ($3 = ($z - 1);$3 -le ($z + 1);$3++) {
+                  For ($4 = ($a - 1);$4 -le ($a + 1);$4++) {
+                    ,($1,$2,$3,$4)
+                  }
+                }
               }
             }
           }
@@ -108,9 +116,13 @@ Function Get-NextCycle {
         For ($2 = ($cube[1] - 1);$2 -le ($cube[1] + 1);$2++) {
           If ($engine[$1][$2]) {
             For ($3 = ($cube[2] - 1);$3 -le ($cube[2] + 1);$3++) {
-              If ($engine[$1] -and $engine[$1][$2] -and $engine[$1][$2][$3] -eq '#') {
-                If (!($1 -eq $cube[0] -and $2 -eq $cube[1] -and $3 -eq $cube[2])) {
-                  ,'#'
+              If ($engine[$1][$2][$3]) {
+                For ($4 = ($cube[3] - 1);$4 -le ($cube[3] + 1);$4++) {
+                  If ($engine[$1] -and $engine[$1][$2] -and $engine[$1][$2][$3] -and $engine[$1][$2][$3][$4] -eq '#') {
+                    If (!($1 -eq $cube[0] -and $2 -eq $cube[1] -and $3 -eq $cube[2] -and $4 -eq $cube[3])) {
+                      ,'#'
+                    }
+                  }
                 }
               }
             }
@@ -118,7 +130,7 @@ Function Get-NextCycle {
         }
       }
     }
-    If ($engine[$cube[0]] -and $engine[$cube[0]][$cube[1]] -and $engine[$cube[0]][$cube[1]][$cube[2]] -and $engine[$cube[0]][$cube[1]][$cube[2]] -eq '#') {
+    If ($engine[$cube[0]] -and $engine[$cube[0]][$cube[1]] -and $engine[$cube[0]][$cube[1]][$cube[2]] -and $engine[$cube[0]][$cube[1]][$cube[2]] -and $engine[$cube[0]][$cube[1]][$cube[2]][$cube[3]] -eq '#') {
       If ($active.count -eq 2 -or $active.count -eq 3) {
         #'= keep active ='
         #$cube
@@ -146,13 +158,16 @@ Function Get-Cubes {
   $uniqueX = $engine.keys | Sort-Object -Unique
   $uniqueY = $engine.keys | ForEach-Object {$x = $_;$engine[$x].keys} | Sort-Object -Unique
   $uniqueZ = $engine.keys | ForEach-Object {$x = $_;$engine[$x].keys} | ForEach-Object {$engine[$x][$_].keys} | Sort-Object -Unique
+  $uniqueA = $engine.keys | ForEach-Object {$x = $_;$engine[$x].keys} | ForEach-Object {$y = $_;$engine[$x][$y].keys} | ForEach-Object {$engine[$x][$y][$_].keys} | Sort-Object -Unique
 
   # get neighbours of cubes that are active
   $activeCubes = For ($x = $uniqueX[0];$x -le $uniqueX[-1];$x++) {
     For ($y = $uniqueY[0];$y -le $uniqueY[-1];$y++) {
       For ($z = $uniqueZ[0];$z -le $uniqueZ[-1];$z++) {
-        If ($engine[$x] -and $engine[$x][$y] -and $engine[$x][$y][$z] -eq '#') {
-          '#'
+        For ($a = $uniqueA[0];$a -le $uniqueA[-1];$a++) {
+          If ($engine[$x] -and $engine[$x][$y] -and $engine[$x][$y][$z] -and $engine[$x][$y][$z][$a] -eq '#') {
+            '#'
+          }
         }
       }
     }
