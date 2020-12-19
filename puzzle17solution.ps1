@@ -161,3 +161,12 @@ Function Get-Cubes {
   # Return count
   $activeCubes.count
 }
+
+# read initial
+$engine = Get-FirstCycle
+
+# run through cycles
+1..6 | Foreach-Object {$engine = Get-NextCycle -engine $engine}
+
+# Get count
+Get-Cubes $engine
